@@ -1,5 +1,7 @@
 import pandas as pd
-from plotnine import ggplot, aes, theme_minimal, geom_point, geom_line, geom_col, ggtitle, ylim
+from plotnine import ggplot, aes, theme_minimal, geom_point, geom_line, geom_col, ggtitle, ylim, geom_smooth, \
+    scale_x_continuous, theme, element_text
+
 
 def load_data(x):                                                           #loading the CSV files in to python for all the years
     data = f"DATA/CBS_{x}.csv"
@@ -215,16 +217,23 @@ def building_age(list_of_data, data):
 
     total = plot_df["Count"].sum()
     plot_df["Percent"] = plot_df["Count"] / total * 100
+    plot_df["Group_num"] = range(len(plot_df))
                                                                             # Making an order to the data so the order isn't random isn't bad
     plot_df["Group"] = pd.Categorical(plot_df["Group"],
                                       categories=[label for _, label in age_columns],
                                       ordered=True)
 
     ba = (
-        ggplot(plot_df, aes(x="Group", y="Percent"))
-        + geom_col()                                                        #maiing bar chart
-        + theme_minimal()
-        + ggtitle(f"The age of the building in the region (in: {year})")
+            ggplot(plot_df, aes(x="Group_num", y="Percent"))
+            + geom_col(fill="#87CEEB", alpha=0.7)
+            + geom_smooth(method="lowess", se=False, color="red", size=1.3)
+            + scale_x_continuous(
+        breaks=list(plot_df["Group_num"]),
+        labels=list(plot_df["Group"]),
+        limits=(-1, plot_df["Group_num"].max() +1)
+    )
+            + theme(axis_text_x=element_text(angle=45, hjust=1))  # <-- FIX HERE
+            + ggtitle(f"The age of the building in the region (in: {year})")
     )
 
     return ba
